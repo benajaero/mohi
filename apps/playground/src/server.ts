@@ -24,11 +24,83 @@ class CounterPage extends LivePage<{ count: number }> {
   }
 }
 
-const server = http.createServer((req, res) => {
+const sseSessions = new Map<
+  string,
+  {
+    session: LiveSession;
+    queue: string[];
+    inFlight: number;
+    res: http.ServerResponse;
+  }
+>();
+
+const server = http.createServer(async (req, res) => {
   if (req.url === "/") {
     const html = renderHtml();
     res.writeHead(200, { "content-type": "text/html; charset=utf-8" });
     res.end(html);
+    return;
+  }
+
+  if (req.url === "/mohi/sse") {
+    const sessionId = crypto.randomUUID();
+    const page = new CounterPage();
+    const session = new LiveSession(page, { id: sessionId, route: "/" });
+    session.setInitialHtml(page.render());
+
+    res.writeHead(200, {
+      "content-type": "text/event-stream",
+      "cache-control": "no-cache",
+      connection: "keep-alive"
+    });
+
+    sseSessions.set(sessionId, {
+      session,
+      queue: [],
+      inFlight: 0,
+      res
+    });
+
+    session.setPatchHandler((result) => {
+      const message = createEnvelope("patch", sessionId, nextSeq(), result.patch);
+      enqueueSse(sessionId, message);
+    });
+
+    const hello = createEnvelope("hello", sessionId, nextSeq(), {
+      capabilities: ["patch.v1", "event.v1"],
+      compression: []
+    });
+    sendSse(res, "hello", hello);
+
+    req.on("close", () => {
+      sseSessions.delete(sessionId);
+    });
+
+    return;
+  }
+
+  if (req.url === "/mohi/event" && req.method === "POST") {
+    const body = await readBody(req);
+    if (!body) {
+      res.writeHead(400);
+      res.end("Missing body");
+      return;
+    }
+    const parsed = JSON.parse(body) as AnyMessage;
+    const session = parsed.sid ? sseSessions.get(parsed.sid) : undefined;
+    if (!session) {
+      res.writeHead(404);
+      res.end("Unknown session");
+      return;
+    }
+    if (parsed.type === "event") {
+      session.session.enqueue({ ...parsed.data, seq: parsed.seq });
+    } else if (parsed.type === "ack") {
+      session.inFlight = Math.max(0, session.inFlight - 1);
+      flushSse(session);
+    }
+    res.writeHead(204);
+    res.end();
     return;
   }
 
@@ -184,4 +256,44 @@ function renderHtml(): string {
     </script>
   </body>
 </html>`;
+}
+
+let sseSeq = 0;
+
+function nextSeq(): number {
+  sseSeq += 1;
+  return sseSeq;
+}
+
+function sendSse(res: http.ServerResponse, event: string, payload: AnyMessage): void {
+  res.write(`event: ${event}\n`);
+  res.write(`data: ${JSON.stringify(payload)}\n\n`);
+}
+
+function enqueueSse(sessionId: string, message: AnyMessage): void {
+  const entry = sseSessions.get(sessionId);
+  if (!entry) return;
+  entry.queue.push(JSON.stringify(message));
+  flushSse(entry);
+}
+
+function flushSse(entry: { queue: string[]; inFlight: number; res: http.ServerResponse }): void {
+  const maxInFlight = 5;
+  while (entry.inFlight < maxInFlight && entry.queue.length > 0) {
+    const payload = entry.queue.shift();
+    if (!payload) return;
+    entry.res.write(`event: patch\n`);
+    entry.res.write(`data: ${payload}\n\n`);
+    entry.inFlight += 1;
+  }
+}
+
+function readBody(req: http.IncomingMessage): Promise<string> {
+  return new Promise((resolve) => {
+    let data = "";
+    req.on("data", (chunk) => {
+      data += chunk;
+    });
+    req.on("end", () => resolve(data));
+  });
 }

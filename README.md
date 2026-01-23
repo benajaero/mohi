@@ -1,6 +1,6 @@
 # Mohi
 
-Mohi is a standards-first, server-driven framework built around a simple idea: render on the server, stream minimal DOM patches, and keep the client thin. No hydration by default. Islands when you need client-side code.
+Mohi is a standards-first, server-driven framework inspired by Mohism. It is built around a simple idea: render on the server, stream minimal DOM patches, and keep the client thin. No hydration by default. Islands when you need client-side code.
 
 This repo is early, but the direction is clear: deterministic builds, portable runtimes (Node/Deno/Bun/Edge), and governance that is enforced by tooling instead of tribal knowledge.
 

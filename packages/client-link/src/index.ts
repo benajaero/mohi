@@ -17,6 +17,9 @@ export interface ProtocolClientOptions {
   url: string;
   link: ClientLink;
   capabilities?: string[];
+  sseUrl?: string;
+  eventUrl?: string;
+  transport?: "ws" | "sse";
 }
 
 export class ClientLink {
@@ -215,10 +218,24 @@ export class ProtocolClient {
   private seq = 0;
   private sid = "";
   private lastPatchSeq = 0;
+  private transport: "ws" | "sse";
+  private sse?: EventSource;
+  private sseUrl?: string;
+  private eventUrl?: string;
+  private helloReceived = false;
 
   constructor(private options: ProtocolClientOptions) {}
 
   connect(): void {
+    this.transport = this.options.transport ?? "ws";
+    this.sseUrl = this.options.sseUrl ?? deriveSseUrl(this.options.url);
+    this.eventUrl = this.options.eventUrl ?? deriveEventUrl(this.options.url);
+
+    if (this.transport === "sse") {
+      this.connectSse();
+      return;
+    }
+
     const { url } = this.options;
     this.ws = new WebSocket(url);
     this.ws.addEventListener("open", () => {
@@ -227,6 +244,7 @@ export class ProtocolClient {
     this.ws.addEventListener("message", (event) => {
       const message = JSON.parse(String(event.data)) as AnyMessage;
       if (message.type === "hello") {
+        this.helloReceived = true;
         this.sid = message.sid;
         return;
       }
@@ -236,12 +254,21 @@ export class ProtocolClient {
         this.sendAck(this.lastPatchSeq);
       }
     });
+    this.ws.addEventListener("error", () => {
+      if (!this.helloReceived) {
+        this.connectSse();
+      }
+    });
+    this.ws.addEventListener("close", () => {
+      if (!this.helloReceived) {
+        this.connectSse();
+      }
+    });
   }
 
   sendEvent(data: EventData): void {
-    if (!this.ws) return;
     const message = createEnvelope("event", this.sid, ++this.seq, data);
-    this.ws.send(JSON.stringify(message));
+    this.sendEnvelope(message);
   }
 
   private sendHello(): void {
@@ -252,8 +279,51 @@ export class ProtocolClient {
   }
 
   private sendAck(received: number): void {
-    if (!this.ws || !this.sid) return;
     const message = createEnvelope("ack", this.sid, this.seq, { received });
+    this.sendEnvelope(message);
+  }
+
+  private sendEnvelope(message: AnyMessage): void {
+    if (this.transport === "sse") {
+      if (!this.eventUrl) return;
+      void fetch(this.eventUrl, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(message)
+      });
+      return;
+    }
+    if (!this.ws) return;
     this.ws.send(JSON.stringify(message));
   }
+
+  private connectSse(): void {
+    if (!this.sseUrl) return;
+    this.transport = "sse";
+    this.sse = new EventSource(this.sseUrl);
+    this.sse.addEventListener("hello", (event) => {
+      const message = JSON.parse((event as MessageEvent).data) as AnyMessage;
+      if (message.type === "hello") {
+        this.sid = message.sid;
+      }
+    });
+    this.sse.addEventListener("patch", (event) => {
+      const message = JSON.parse((event as MessageEvent).data) as AnyMessage;
+      if (message.type === "patch") {
+        this.options.link.applyPatch(message.data.ops);
+        this.lastPatchSeq = message.seq;
+        this.sendAck(this.lastPatchSeq);
+      }
+    });
+  }
+}
+
+function deriveSseUrl(wsUrl: string): string | undefined {
+  if (!wsUrl.startsWith("ws")) return undefined;
+  return wsUrl.replace(/^ws/, "http") + "/sse";
+}
+
+function deriveEventUrl(wsUrl: string): string | undefined {
+  if (!wsUrl.startsWith("ws")) return undefined;
+  return wsUrl.replace(/^ws/, "http") + "/event";
 }
