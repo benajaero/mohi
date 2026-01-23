@@ -32,4 +32,11 @@ It is not another React meta-framework. It is a new operating model for building
 - `statement.md` - competitive positioning statement
 - `LICENSE` - CC BY-SA 4.0
 
+## Development
+
+- Install Node 20+ and pnpm
+- `pnpm install`
+- `pnpm build`
+- `pnpm -C apps/playground dev`
+
 License: CC BY-SA 4.0

@@ -1,0 +1,154 @@
+import type { PatchOp } from "@mohi/protocol";
+
+export interface ClientLinkOptions {
+  rootId?: string;
+}
+
+export class ClientLink {
+  private rootId: string;
+  private idMap = new Map<string, Element>();
+
+  constructor(options: ClientLinkOptions = {}) {
+    this.rootId = options.rootId ?? "mohi-root";
+  }
+
+  hydrateIdMap(): void {
+    this.idMap.clear();
+    const root = document.querySelector(`[data-mohi-id="${this.rootId}"]`);
+    if (!root) {
+      throw new Error(`Missing root node ${this.rootId}`);
+    }
+    this.walk(root);
+  }
+
+  applyPatch(ops: PatchOp[]): void {
+    for (const op of ops) {
+      switch (op.op) {
+        case "setText":
+          this.setText(op.id, op.value);
+          break;
+        case "setAttr":
+          this.setAttr(op.id, op.name, op.value);
+          break;
+        case "removeAttr":
+          this.removeAttr(op.id, op.name);
+          break;
+        case "insert":
+          this.insert(op.parent, op.index, op.html);
+          break;
+        case "remove":
+          this.remove(op.id);
+          break;
+        case "replace":
+          this.replace(op.id, op.html);
+          break;
+        case "move":
+          this.move(op.id, op.parent, op.index);
+          break;
+        case "setProps":
+          this.setProps(op.id, op.props);
+          break;
+        default:
+          this.assertNever(op);
+      }
+    }
+  }
+
+  private setText(id: string, value: string): void {
+    const node = this.getNode(id);
+    node.textContent = value;
+  }
+
+  private setAttr(id: string, name: string, value: string): void {
+    const node = this.getNode(id);
+    node.setAttribute(name, value);
+  }
+
+  private removeAttr(id: string, name: string): void {
+    const node = this.getNode(id);
+    node.removeAttribute(name);
+  }
+
+  private insert(parentId: string, index: number, html: string): void {
+    const parent = this.getNode(parentId);
+    const fragment = this.fragmentFromHtml(html);
+    const childNodes = Array.from(parent.childNodes);
+    const refNode = childNodes[index] ?? null;
+    parent.insertBefore(fragment, refNode);
+    this.rebuildIdMap(parent);
+  }
+
+  private remove(id: string): void {
+    const node = this.getNode(id);
+    node.remove();
+    this.idMap.delete(id);
+  }
+
+  private replace(id: string, html: string): void {
+    const node = this.getNode(id);
+    const fragment = this.fragmentFromHtml(html);
+    const parent = node.parentNode;
+    if (!parent) {
+      throw new Error(`Cannot replace node without parent: ${id}`);
+    }
+    parent.replaceChild(fragment, node);
+    this.rebuildIdMap(parent);
+  }
+
+  private move(id: string, parentId: string, index: number): void {
+    const node = this.getNode(id);
+    const parent = this.getNode(parentId);
+    const childNodes = Array.from(parent.childNodes);
+    const refNode = childNodes[index] ?? null;
+    parent.insertBefore(node, refNode);
+    this.rebuildIdMap(parent);
+  }
+
+  private setProps(id: string, props: Record<string, string | null>): void {
+    const node = this.getNode(id);
+    for (const [name, value] of Object.entries(props)) {
+      if (value === null) {
+        node.removeAttribute(name);
+      } else {
+        node.setAttribute(name, value);
+      }
+    }
+  }
+
+  private rebuildIdMap(root: Element | ParentNode): void {
+    this.idMap.clear();
+    const rootElement = root instanceof Element ? root : root.firstChild;
+    if (rootElement instanceof Element) {
+      this.walk(rootElement);
+    }
+  }
+
+  private walk(root: Element): void {
+    if (root.hasAttribute("data-mohi-id")) {
+      const id = root.getAttribute("data-mohi-id");
+      if (id) this.idMap.set(id, root);
+    }
+    for (const child of Array.from(root.children)) {
+      this.walk(child);
+    }
+  }
+
+  private fragmentFromHtml(html: string): DocumentFragment {
+    const template = document.createElement("template");
+    template.innerHTML = html.trim();
+    return template.content;
+  }
+
+  private getNode(id: string): Element {
+    const node = this.idMap.get(id) ?? document.querySelector(`[data-mohi-id="${id}"]`);
+    if (!node) {
+      throw new Error(`Missing node ${id}`);
+    }
+    this.idMap.set(id, node);
+    return node;
+  }
+
+  private assertNever(value: never): never {
+    throw new Error(`Unknown op ${(value as { op?: string }).op ?? "unknown"}`);
+  }
+}
