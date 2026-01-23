@@ -1,4 +1,4 @@
-import { replaceRoot } from "@mohi/diff";
+import { diffHtml } from "@mohi/diff";
 import type { EventData, PatchData } from "@mohi/protocol";
 
 export type RenderOutput = string;
@@ -41,8 +41,15 @@ export class LiveSession {
   private processing = false;
   private onPatch?: PatchHandler;
   private eventLog: SessionLogEntry[] = [];
+  private lastHtml = "";
 
-  constructor(private page: LivePage<Record<string, unknown>>, private ctx: SessionContext) {}
+  constructor(
+    private page: LivePage<Record<string, unknown>>,
+    private ctx: SessionContext,
+    initialHtml?: string
+  ) {
+    if (initialHtml) this.lastHtml = initialHtml;
+  }
 
   setPatchHandler(handler: PatchHandler): void {
     this.onPatch = handler;
@@ -55,6 +62,10 @@ export class LiveSession {
 
   getEventLog(): SessionLogEntry[] {
     return [...this.eventLog];
+  }
+
+  setInitialHtml(html: string): void {
+    this.lastHtml = html;
   }
 
   private async processQueue(): Promise<void> {
@@ -93,7 +104,8 @@ export class LiveSession {
       ts: Date.now()
     });
 
-    const patch = replaceRoot(html);
+    const patch = diffHtml(this.lastHtml, html);
+    this.lastHtml = html;
 
     return {
       patch: {

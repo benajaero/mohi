@@ -1,15 +1,38 @@
-import type { PatchOp } from "@mohi/protocol";
+import {
+  createEnvelope,
+  type AnyMessage,
+  type EventData,
+  type PatchOp
+} from "@mohi/protocol";
 
 export interface ClientLinkOptions {
   rootId?: string;
+  actionAttribute?: string;
+  payloadAttribute?: string;
+  getContext?: () => Record<string, unknown>;
+  onEvent?: (event: EventData) => void;
+}
+
+export interface ProtocolClientOptions {
+  url: string;
+  link: ClientLink;
+  capabilities?: string[];
 }
 
 export class ClientLink {
   private rootId: string;
   private idMap = new Map<string, Element>();
+  private actionAttribute: string;
+  private payloadAttribute: string;
+  private getContext?: () => Record<string, unknown>;
+  private onEvent?: (event: EventData) => void;
 
   constructor(options: ClientLinkOptions = {}) {
     this.rootId = options.rootId ?? "mohi-root";
+    this.actionAttribute = options.actionAttribute ?? "data-mohi-action";
+    this.payloadAttribute = options.payloadAttribute ?? "data-mohi-payload";
+    this.getContext = options.getContext;
+    this.onEvent = options.onEvent;
   }
 
   hydrateIdMap(): void {
@@ -52,6 +75,20 @@ export class ClientLink {
           this.assertNever(op);
       }
     }
+  }
+
+  bindEvents(root: Document | Element = document): void {
+    root.addEventListener("click", (event) => {
+      if (!this.onEvent) return;
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      const actionEl = target.closest(`[${this.actionAttribute}]`);
+      if (!actionEl) return;
+      const action = actionEl.getAttribute(this.actionAttribute);
+      if (!action) return;
+      const eventData = this.buildEvent(actionEl, action);
+      this.onEvent(eventData);
+    });
   }
 
   private setText(id: string, value: string): void {
@@ -123,6 +160,26 @@ export class ClientLink {
     }
   }
 
+  private buildEvent(actionEl: Element, action: string): EventData {
+    const payload = this.readPayload(actionEl);
+    return {
+      target: actionEl.getAttribute("data-mohi-id") ?? this.rootId,
+      action,
+      payload,
+      context: this.getContext ? this.getContext() : undefined
+    };
+  }
+
+  private readPayload(actionEl: Element): unknown {
+    const raw = actionEl.getAttribute(this.payloadAttribute);
+    if (!raw) return undefined;
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return raw;
+    }
+  }
+
   private walk(root: Element): void {
     if (root.hasAttribute("data-mohi-id")) {
       const id = root.getAttribute("data-mohi-id");
@@ -150,5 +207,44 @@ export class ClientLink {
 
   private assertNever(value: never): never {
     throw new Error(`Unknown op ${(value as { op?: string }).op ?? "unknown"}`);
+  }
+}
+
+export class ProtocolClient {
+  private ws?: WebSocket;
+  private seq = 0;
+  private sid = "";
+
+  constructor(private options: ProtocolClientOptions) {}
+
+  connect(): void {
+    const { url } = this.options;
+    this.ws = new WebSocket(url);
+    this.ws.addEventListener("open", () => {
+      this.sendHello();
+    });
+    this.ws.addEventListener("message", (event) => {
+      const message = JSON.parse(String(event.data)) as AnyMessage;
+      if (message.type === "hello") {
+        this.sid = message.sid;
+        return;
+      }
+      if (message.type === "patch") {
+        this.options.link.applyPatch(message.data.ops);
+      }
+    });
+  }
+
+  sendEvent(data: EventData): void {
+    if (!this.ws) return;
+    const message = createEnvelope("event", this.sid, ++this.seq, data);
+    this.ws.send(JSON.stringify(message));
+  }
+
+  private sendHello(): void {
+    if (!this.ws) return;
+    const capabilities = this.options.capabilities ?? ["patch.v1", "event.v1"];
+    const message = createEnvelope("hello", "", this.seq, { capabilities });
+    this.ws.send(JSON.stringify(message));
   }
 }

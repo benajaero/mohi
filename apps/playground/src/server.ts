@@ -40,7 +40,9 @@ const wss = new WebSocketServer({ server, path: "/mohi" });
 
 wss.on("connection", (socket) => {
   const sessionId = crypto.randomUUID();
-  const session = new LiveSession(new CounterPage(), { id: sessionId, route: "/" });
+  const page = new CounterPage();
+  const session = new LiveSession(page, { id: sessionId, route: "/" });
+  session.setInitialHtml(page.render());
   let serverSeq = 0;
 
   session.setPatchHandler((result) => {
