@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="220" viewBox="0 0 900 220" role="img" aria-label="Mohi terminal demo">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0e1116" />
+      <stop offset="100%" stop-color="#101820" />
+    </linearGradient>
+    <style>
+      .term { font: 14px "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace; fill: #dbe7ff; }
+      .dim { fill: #7f8ea3; }
+      .accent { fill: #7cf3c2; }
+    </style>
+  </defs>
+  <rect x="0" y="0" width="900" height="220" rx="12" fill="url(#bg)" />
+  <rect x="0" y="0" width="900" height="28" rx="12" fill="#0b0f14" />
+  <circle cx="16" cy="14" r="5" fill="#ff5f56" />
+  <circle cx="34" cy="14" r="5" fill="#ffbd2e" />
+  <circle cx="52" cy="14" r="5" fill="#27c93f" />
+
+  <text x="24" y="58" class="term dim">$</text>
+  <text x="40" y="58" class="term">pnpm install</text>
+
+  <text x="24" y="86" class="term dim">$</text>
+  <text x="40" y="86" class="term">pnpm build</text>
+
+  <text x="24" y="114" class="term dim">$</text>
+  <text x="40" y="114" class="term">pnpm test</text>
+
+  <text x="24" y="142" class="term dim">$</text>
+  <text x="40" y="142" class="term">pnpm bench</text>
+
+  <text x="24" y="178" class="term accent">js/counter: 2 ops, 0.091 ms avg</text>
+  <text x="24" y="198" class="term accent">js/attrs: 2 ops, 0.074 ms avg</text>
+
+  <rect x="40" y="48" width="8" height="14" fill="#7cf3c2">
+    <animate attributeName="opacity" values="1;0;1" dur="1s" repeatCount="indefinite" />
+  </rect>
+</svg>

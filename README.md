@@ -4,13 +4,11 @@
 
 Mohi is a standards-first, server-driven framework inspired by Mohism. It is built around a simple idea: render on the server, stream minimal DOM patches, and keep the client thin. No hydration by default. Islands when you need client-side code.
 
-This repo is early, but the direction is clear: deterministic builds, portable runtimes (Node/Deno/Bun/Edge), and governance that is enforced by tooling instead of tribal knowledge.
+## Quick demo
 
-## Current status
+![Mohi terminal demo](docs/assets/terminal-demo.svg)
 
-Pre-alpha (0.0.1-prealpha). The core live loop is in place with a minimal protocol, runtime session queue, patch delivery, and a playground server. Diffing and patch ops are basic and will evolve quickly.
-
-## What matters here
+## Why Mohi
 
 - Server-driven live UI with a persistent link and tiny patches.
 - Resumability by default; the client only handles events and patches.
@@ -25,26 +23,25 @@ Pre-alpha (0.0.1-prealpha). The core live loop is in place with a minimal protoc
 - Standards-first: Web APIs and portable runtimes instead of bespoke platform lock-in.
 - Composable governance: explicit budgets, policies, and module boundaries that scale.
 
-## Who this is for
+## Current status
 
-- Teams that feel their JS payloads are bloated.
-- Products that need real-time updates without a full SPA.
-- Orgs that want portability and long-term maintainability.
+Pre-alpha (0.0.1-prealpha). The core live loop is in place with a minimal protocol, runtime session queue, patch delivery, and a playground server. Diffing and patch ops are basic and will evolve quickly.
+
+## Getting started
+
+```bash
+pnpm install
+pnpm build
+pnpm test
+pnpm bench
+pnpm -C apps/playground dev
+```
 
 ## Docs
 
 - `spec.md` - product and architecture spec
 - `statement.md` - competitive positioning statement
 - `LICENSE` - CC BY-SA 4.0
-
-## Development
-
-- Install Node 20+ and pnpm
-- `pnpm install`
-- `pnpm build`
-- `pnpm typecheck`
-- `pnpm test`
-- `pnpm -C apps/playground dev`
 
 ## Performance
 
