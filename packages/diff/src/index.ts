@@ -5,6 +5,22 @@ export interface DiffResult {
   ops: PatchOp[];
 }
 
+export interface DiffBackend {
+  diffHtml: (prevHtml: string, nextHtml: string, rootId?: string) => DiffResult;
+}
+
+export function diffHtmlWithBackend(
+  prevHtml: string,
+  nextHtml: string,
+  rootId: string,
+  backend?: DiffBackend
+): DiffResult {
+  if (backend) {
+    return backend.diffHtml(prevHtml, nextHtml, rootId);
+  }
+  return diffHtml(prevHtml, nextHtml, rootId);
+}
+
 export function replaceRoot(html: string, rootId = "mohi-root"): DiffResult {
   return {
     ops: [

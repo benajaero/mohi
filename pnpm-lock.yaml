@@ -65,6 +65,12 @@ importers:
         specifier: ^0.18.6
         version: 0.18.12
 
+  packages/diff-wasm:
+    dependencies:
+      '@mohi/diff':
+        specifier: workspace:*
+        version: link:../diff
+
   packages/mohi:
     dependencies:
       '@mohi/client-link':

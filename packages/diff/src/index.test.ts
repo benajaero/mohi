@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { diffHtml } from "./index.js";
+import { diffHtml, diffHtmlWithBackend } from "./index.js";
 
 const prev = `
   <main data-mohi-id="mohi-root">
@@ -59,5 +59,12 @@ describe("diffHtml", () => {
     `;
     const result = diffHtml(before, after);
     expect(result.ops.some((op) => op.op === "move")).toBe(true);
+  });
+
+  it("allows a custom diff backend", () => {
+    const result = diffHtmlWithBackend(prev, next, "mohi-root", {
+      diffHtml: () => ({ ops: [{ op: "replace", id: "mohi-root", html: "<div/>" }] })
+    });
+    expect(result.ops[0]?.op).toBe("replace");
   });
 });

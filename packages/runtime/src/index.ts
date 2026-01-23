@@ -1,4 +1,4 @@
-import { diffHtml } from "@mohi/diff";
+import { diffHtmlWithBackend, type DiffBackend } from "@mohi/diff";
 import type { EventData, PatchData } from "@mohi/protocol";
 
 export type RenderOutput = string;
@@ -42,13 +42,19 @@ export class LiveSession {
   private onPatch?: PatchHandler;
   private eventLog: SessionLogEntry[] = [];
   private lastHtml = "";
+  private diffBackend?: DiffBackend;
 
   constructor(
     private page: LivePage<Record<string, unknown>>,
     private ctx: SessionContext,
-    initialHtml?: string
+    options?: string | { initialHtml?: string; diffBackend?: DiffBackend }
   ) {
-    if (initialHtml) this.lastHtml = initialHtml;
+    if (typeof options === "string") {
+      this.lastHtml = options;
+      return;
+    }
+    if (options?.initialHtml) this.lastHtml = options.initialHtml;
+    this.diffBackend = options?.diffBackend;
   }
 
   setPatchHandler(handler: PatchHandler): void {
@@ -104,7 +110,7 @@ export class LiveSession {
       ts: Date.now()
     });
 
-    const patch = diffHtml(this.lastHtml, html);
+    const patch = diffHtmlWithBackend(this.lastHtml, html, "mohi-root", this.diffBackend);
     this.lastHtml = html;
 
     return {

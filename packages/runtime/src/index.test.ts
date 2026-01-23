@@ -33,7 +33,7 @@ describe("LiveSession", () => {
       payload: 2
     });
 
-    await new Promise((resolve) => setTimeout(resolve, 0));
+    await waitFor(() => session.getEventLog().length === 2);
 
     const log = session.getEventLog();
     expect(log).toHaveLength(2);
@@ -52,3 +52,13 @@ describe("LiveSession", () => {
     expect(page.state.count).toBe(4);
   });
 });
+
+async function waitFor(condition: () => boolean, timeoutMs = 50): Promise<void> {
+  const start = Date.now();
+  while (!condition()) {
+    if (Date.now() - start > timeoutMs) {
+      throw new Error("Timed out waiting for condition");
+    }
+    await new Promise((resolve) => setTimeout(resolve, 1));
+  }
+}
