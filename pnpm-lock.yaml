@@ -21,6 +21,16 @@ importers:
         specifier: ^2.1.4
         version: 2.1.9(@types/node@20.19.30)
 
+  apps/benchmarks:
+    dependencies:
+      '@mohi/diff':
+        specifier: workspace:*
+        version: link:../../packages/diff
+    devDependencies:
+      tsx:
+        specifier: ^4.19.2
+        version: 4.21.0
+
   apps/playground:
     dependencies:
       '@mohi/protocol':
