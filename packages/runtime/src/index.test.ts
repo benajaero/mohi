@@ -58,8 +58,12 @@ describe("LiveSession", () => {
       plugins: [
         {
           name: "test",
-          onActionStart: () => calls.push("start"),
-          onActionEnd: () => calls.push("end")
+          onActionStart: () => {
+            calls.push("start");
+          },
+          onActionEnd: () => {
+            calls.push("end");
+          }
         }
       ]
     });

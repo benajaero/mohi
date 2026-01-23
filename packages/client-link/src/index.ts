@@ -222,12 +222,12 @@ export class ProtocolClient {
   private seq = 0;
   private sid = "";
   private lastPatchSeq = 0;
-  private transport: "ws" | "sse";
+  private transport: "ws" | "sse" = "ws";
   private sse?: EventSource;
   private sseUrl?: string;
   private eventUrl?: string;
   private helloReceived = false;
-  private format: MessageFormat;
+  private format: MessageFormat = "json";
 
   constructor(private options: ProtocolClientOptions) {}
 
@@ -274,19 +274,22 @@ export class ProtocolClient {
   }
 
   sendEvent(data: EventData): void {
-    const message = createEnvelope("event", this.sid, ++this.seq, data);
+    const message = createEnvelope("event", this.sid, ++this.seq, data) as AnyMessage;
     this.sendEnvelope(message);
   }
 
   private sendHello(): void {
     if (!this.ws) return;
     const capabilities = this.options.capabilities ?? ["patch.v1", "event.v1"];
-    const message = createEnvelope("hello", "", this.seq, { capabilities, format: this.format });
+    const message = createEnvelope("hello", "", this.seq, {
+      capabilities,
+      format: this.format
+    }) as AnyMessage;
     this.ws.send(encodeMessage(message, this.format));
   }
 
   private sendAck(received: number): void {
-    const message = createEnvelope("ack", this.sid, this.seq, { received });
+    const message = createEnvelope("ack", this.sid, this.seq, { received }) as AnyMessage;
     this.sendEnvelope(message);
   }
 

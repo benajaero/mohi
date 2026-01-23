@@ -9,6 +9,31 @@ const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 const targetsPath = resolve(repoRoot, "benchmarks", "perf-targets.json");
 const targets = JSON.parse(readFileSync(targetsPath, "utf-8")) as PerfTargets;
 
+const fixtures = {
+  counterPrev: `
+    <main data-mohi-id="mohi-root">
+      <h1 data-mohi-id="title">Mohi</h1>
+      <button data-mohi-id="btn" class="a">Count: 0</button>
+    </main>
+  `,
+  counterNext: `
+    <main data-mohi-id="mohi-root">
+      <h1 data-mohi-id="title">Mohi</h1>
+      <button data-mohi-id="btn" class="a">Count: 1</button>
+    </main>
+  `,
+  attrsPrev: `
+    <section data-mohi-id="mohi-root">
+      <div data-mohi-id="box" class="a" data-active="false">Box</div>
+    </section>
+  `,
+  attrsNext: `
+    <section data-mohi-id="mohi-root">
+      <div data-mohi-id="box" class="b" data-active="true">Box</div>
+    </section>
+  `
+};
+
 const cases = [
   { name: "counter", prev: fixtures.counterPrev, next: fixtures.counterNext },
   { name: "attrs", prev: fixtures.attrsPrev, next: fixtures.attrsNext }
@@ -70,28 +95,3 @@ function runCase(
   }
   return { backend, name, avgMs: total / iterations, ops };
 }
-
-const fixtures = {
-  counterPrev: `
-    <main data-mohi-id="mohi-root">
-      <h1 data-mohi-id="title">Mohi</h1>
-      <button data-mohi-id="btn" class="a">Count: 0</button>
-    </main>
-  `,
-  counterNext: `
-    <main data-mohi-id="mohi-root">
-      <h1 data-mohi-id="title">Mohi</h1>
-      <button data-mohi-id="btn" class="a">Count: 1</button>
-    </main>
-  `,
-  attrsPrev: `
-    <section data-mohi-id="mohi-root">
-      <div data-mohi-id="box" class="a" data-active="false">Box</div>
-    </section>
-  `,
-  attrsNext: `
-    <section data-mohi-id="mohi-root">
-      <div data-mohi-id="box" class="b" data-active="true">Box</div>
-    </section>
-  `
-};

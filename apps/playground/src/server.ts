@@ -69,14 +69,14 @@ const server = http.createServer(async (req, res) => {
     });
 
     session.setPatchHandler((result) => {
-      const message = createEnvelope("patch", sessionId, nextSeq(), result.patch);
+      const message = createEnvelope("patch", sessionId, nextSeq(), result.patch) as AnyMessage;
       enqueueSse(sessionId, message);
     });
 
     const hello = createEnvelope("hello", sessionId, nextSeq(), {
       capabilities: ["patch.v1", "event.v1"],
       compression: []
-    });
+    }) as AnyMessage;
     sendSse(res, "hello", hello);
 
     req.on("close", () => {
@@ -129,7 +129,7 @@ wss.on("connection", (socket) => {
   let format: MessageFormat = "json";
 
   session.setPatchHandler((result) => {
-    const message = createEnvelope("patch", sessionId, ++serverSeq, result.patch);
+    const message = createEnvelope("patch", sessionId, ++serverSeq, result.patch) as AnyMessage;
     const payload = encodeMessage(message, format);
     enqueuePatch(payload);
   });
@@ -142,7 +142,7 @@ wss.on("connection", (socket) => {
       const reply = createEnvelope("hello", sessionId, ++serverSeq, {
         capabilities: ["patch.v1", "event.v1"],
         compression: []
-      });
+      }) as AnyMessage;
       socket.send(encodeMessage(reply, format));
       return;
     }

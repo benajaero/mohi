@@ -142,11 +142,22 @@ export class LiveSession {
     return result;
   }
 
-  private async runHook(hook: keyof RuntimePlugin, ...args: unknown[]): Promise<void> {
+  private async runHook(
+    hook: keyof RuntimePlugin,
+    event: SessionEvent,
+    result?: SessionResult
+  ): Promise<void> {
     for (const plugin of this.plugins) {
       const fn = plugin[hook];
       if (typeof fn === "function") {
-        await fn(...args);
+        if (hook === "onActionStart") {
+          await (fn as (event: SessionEvent) => void | Promise<void>)(event);
+        } else if (hook === "onActionEnd" && result) {
+          await (fn as (event: SessionEvent, result: SessionResult) => void | Promise<void>)(
+            event,
+            result
+          );
+        }
       }
     }
   }
