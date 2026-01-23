@@ -18,6 +18,7 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@mohi/diff": "workspace:*"
+    "@mohi/diff": "workspace:*",
+    "@mohi/protocol": "workspace:*"
   }
 }

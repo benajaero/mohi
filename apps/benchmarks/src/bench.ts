@@ -1,5 +1,6 @@
-import { diffHtml } from "@mohi/diff";
-import { readFileSync } from "node:fs";
+import { diffHtml, diffHtmlWithBackend, type DiffBackend } from "@mohi/diff";
+import { loadWasmBackend } from "@mohi/diff-wasm";
+import { readFileSync, writeFileSync } from "node:fs";
 import { performance } from "node:perf_hooks";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -13,10 +14,21 @@ const cases = [
   { name: "attrs", prev: fixtures.attrsPrev, next: fixtures.attrsNext }
 ];
 
-const results = cases.map((benchmark) => runCase(benchmark.name, benchmark.prev, benchmark.next));
+const jsResults = cases.map((benchmark) =>
+  runCase("js", benchmark.name, benchmark.prev, benchmark.next)
+);
+
+const wasmBackend = await loadWasmBackend();
+const wasmResults = wasmBackend
+  ? cases.map((benchmark) => runCase("wasm", benchmark.name, benchmark.prev, benchmark.next, wasmBackend))
+  : [];
+
+const results = [...jsResults, ...wasmResults];
 
 for (const result of results) {
-  console.log(`${result.name}: ${result.ops} ops, ${result.avgMs.toFixed(3)} ms avg`);
+  console.log(
+    `${result.backend}/${result.name}: ${result.ops} ops, ${result.avgMs.toFixed(3)} ms avg`
+  );
 }
 
 const maxAvg = Math.max(...results.map((result) => result.avgMs));
@@ -25,22 +37,38 @@ if (maxAvg > targets.diff_avg_ms) {
   process.exitCode = 1;
 }
 
+const report = {
+  generatedAt: new Date().toISOString(),
+  results
+};
+
+const reportPath = resolve(repoRoot, "benchmarks", "last-report.json");
+writeFileSync(reportPath, JSON.stringify(report, null, 2));
+
 interface PerfTargets {
   diff_avg_ms: number;
   patch_p95_kb: number;
 }
 
-function runCase(name: string, prev: string, next: string): { name: string; avgMs: number; ops: number } {
+function runCase(
+  backend: string,
+  name: string,
+  prev: string,
+  next: string,
+  backendImpl?: DiffBackend
+): { backend: string; name: string; avgMs: number; ops: number } {
   const iterations = 500;
   let total = 0;
   let ops = 0;
   for (let i = 0; i < iterations; i += 1) {
     const start = performance.now();
-    const result = diffHtml(prev, next);
+    const result = backendImpl
+      ? diffHtmlWithBackend(prev, next, "mohi-root", backendImpl)
+      : diffHtml(prev, next);
     total += performance.now() - start;
     ops = result.ops.length;
   }
-  return { name, avgMs: total / iterations, ops };
+  return { backend, name, avgMs: total / iterations, ops };
 }
 
 const fixtures = {

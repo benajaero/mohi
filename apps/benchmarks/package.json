@@ -11,7 +11,8 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@mohi/diff": "workspace:*"
+    "@mohi/diff": "workspace:*",
+    "@mohi/diff-wasm": "workspace:*"
   },
   "devDependencies": {
     "tsx": "^4.19.2"

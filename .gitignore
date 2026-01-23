@@ -40,6 +40,9 @@ build/Release
 # Build output
 dist
 
+# Benchmark reports
+benchmarks/last-report.json
+
 # Dependency directories
 node_modules/
 jspm_packages/

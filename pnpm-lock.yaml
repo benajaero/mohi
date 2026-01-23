@@ -26,6 +26,9 @@ importers:
       '@mohi/diff':
         specifier: workspace:*
         version: link:../../packages/diff
+      '@mohi/diff-wasm':
+        specifier: workspace:*
+        version: link:../../packages/diff-wasm
     devDependencies:
       tsx:
         specifier: ^4.19.2
@@ -70,6 +73,15 @@ importers:
       '@mohi/diff':
         specifier: workspace:*
         version: link:../diff
+      '@mohi/protocol':
+        specifier: workspace:*
+        version: link:../protocol
+
+  packages/kit:
+    dependencies:
+      '@mohi/runtime':
+        specifier: workspace:*
+        version: link:../runtime
 
   packages/mohi:
     dependencies:
