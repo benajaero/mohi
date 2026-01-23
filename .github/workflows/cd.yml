@@ -1,0 +1,33 @@
+name: CD
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Build
+        run: pnpm build
+      - name: Package artifacts
+        run: |
+          mkdir -p artifacts
+          tar -czf artifacts/mohi-dist.tar.gz packages/*/dist apps/*/dist || true
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/mohi-dist.tar.gz
