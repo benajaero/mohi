@@ -1,6 +1,13 @@
 import http from "node:http";
 import { WebSocketServer } from "ws";
-import { createEnvelope, PROTOCOL_VERSION, type AnyMessage } from "@mohi/protocol";
+import {
+  createEnvelope,
+  decodeMessage,
+  encodeMessage,
+  PROTOCOL_VERSION,
+  type AnyMessage,
+  type MessageFormat
+} from "@mohi/protocol";
 import { LivePage, LiveSession } from "@mohi/runtime";
 
 class CounterPage extends LivePage<{ count: number }> {
@@ -116,24 +123,27 @@ wss.on("connection", (socket) => {
   const session = new LiveSession(page, { id: sessionId, route: "/" });
   session.setInitialHtml(page.render());
   let serverSeq = 0;
-  const patchQueue: string[] = [];
+  const patchQueue: Array<string | Uint8Array> = [];
   let inFlight = 0;
   const maxInFlight = 5;
+  let format: MessageFormat = "json";
 
   session.setPatchHandler((result) => {
     const message = createEnvelope("patch", sessionId, ++serverSeq, result.patch);
-    enqueuePatch(JSON.stringify(message));
+    const payload = encodeMessage(message, format);
+    enqueuePatch(payload);
   });
 
   socket.on("message", async (data) => {
-    const parsed = JSON.parse(data.toString()) as AnyMessage;
+    const parsed = decodeMessage(data as Buffer) as AnyMessage;
 
     if (parsed.type === "hello") {
+      format = parsed.data.format ?? "json";
       const reply = createEnvelope("hello", sessionId, ++serverSeq, {
         capabilities: ["patch.v1", "event.v1"],
         compression: []
       });
-      socket.send(JSON.stringify(reply));
+      socket.send(encodeMessage(reply, format));
       return;
     }
 
@@ -149,7 +159,7 @@ wss.on("connection", (socket) => {
     }
   });
 
-  function enqueuePatch(payload: string): void {
+  function enqueuePatch(payload: string | Uint8Array): void {
     patchQueue.push(payload);
     flushQueue();
   }

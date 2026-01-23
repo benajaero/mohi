@@ -1,7 +1,10 @@
 import {
   createEnvelope,
+  decodeMessage,
+  encodeMessage,
   type AnyMessage,
   type EventData,
+  type MessageFormat,
   type PatchOp
 } from "@mohi/protocol";
 
@@ -20,6 +23,7 @@ export interface ProtocolClientOptions {
   sseUrl?: string;
   eventUrl?: string;
   transport?: "ws" | "sse";
+  format?: MessageFormat;
 }
 
 export class ClientLink {
@@ -223,6 +227,7 @@ export class ProtocolClient {
   private sseUrl?: string;
   private eventUrl?: string;
   private helloReceived = false;
+  private format: MessageFormat;
 
   constructor(private options: ProtocolClientOptions) {}
 
@@ -230,6 +235,7 @@ export class ProtocolClient {
     this.transport = this.options.transport ?? "ws";
     this.sseUrl = this.options.sseUrl ?? deriveSseUrl(this.options.url);
     this.eventUrl = this.options.eventUrl ?? deriveEventUrl(this.options.url);
+    this.format = this.options.format ?? "json";
 
     if (this.transport === "sse") {
       this.connectSse();
@@ -241,8 +247,9 @@ export class ProtocolClient {
     this.ws.addEventListener("open", () => {
       this.sendHello();
     });
-    this.ws.addEventListener("message", (event) => {
-      const message = JSON.parse(String(event.data)) as AnyMessage;
+    this.ws.addEventListener("message", async (event) => {
+      const payload = await normalizePayload(event.data);
+      const message = decodeMessage(payload) as AnyMessage;
       if (message.type === "hello") {
         this.helloReceived = true;
         this.sid = message.sid;
@@ -274,8 +281,8 @@ export class ProtocolClient {
   private sendHello(): void {
     if (!this.ws) return;
     const capabilities = this.options.capabilities ?? ["patch.v1", "event.v1"];
-    const message = createEnvelope("hello", "", this.seq, { capabilities });
-    this.ws.send(JSON.stringify(message));
+    const message = createEnvelope("hello", "", this.seq, { capabilities, format: this.format });
+    this.ws.send(encodeMessage(message, this.format));
   }
 
   private sendAck(received: number): void {
@@ -294,7 +301,7 @@ export class ProtocolClient {
       return;
     }
     if (!this.ws) return;
-    this.ws.send(JSON.stringify(message));
+    this.ws.send(encodeMessage(message, this.format));
   }
 
   private connectSse(): void {
@@ -316,6 +323,16 @@ export class ProtocolClient {
       }
     });
   }
+}
+
+async function normalizePayload(payload: unknown): Promise<string | ArrayBuffer | Uint8Array> {
+  if (typeof payload === "string") return payload;
+  if (payload instanceof ArrayBuffer) return payload;
+  if (payload instanceof Uint8Array) return payload;
+  if (payload instanceof Blob) {
+    return payload.arrayBuffer();
+  }
+  return String(payload);
 }
 
 function deriveSseUrl(wsUrl: string): string | undefined {

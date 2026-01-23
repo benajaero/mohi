@@ -1,3 +1,5 @@
+import { decode, encode } from "cbor-x";
+
 export type ProtocolVersion = 1;
 
 export type MessageType =
@@ -18,10 +20,13 @@ export interface Envelope<T = unknown> {
   data: T;
 }
 
+export type MessageFormat = "json" | "cbor";
+
 export interface HelloData {
   capabilities: string[];
   compression?: string[];
   resume?: string;
+  format?: MessageFormat;
 }
 
 export interface EventData {
@@ -146,4 +151,21 @@ export function createEnvelope<T>(
     ts: Date.now(),
     data
   };
+}
+
+export function encodeMessage(message: AnyMessage, format: MessageFormat = "json"): string | Uint8Array {
+  if (format === "cbor") {
+    return encode(message);
+  }
+  return JSON.stringify(message);
+}
+
+export function decodeMessage(payload: ArrayBuffer | Uint8Array | string): AnyMessage {
+  if (typeof payload === "string") {
+    return JSON.parse(payload) as AnyMessage;
+  }
+  if (payload instanceof ArrayBuffer) {
+    return decode(new Uint8Array(payload)) as AnyMessage;
+  }
+  return decode(payload) as AnyMessage;
 }
