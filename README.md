@@ -1,6 +1,9 @@
 # Mohi
 
-![CI](https://github.com/benajaero/mohi/actions/workflows/ci.yml/badge.svg?branch=main)
+[![CI](https://github.com/benajaero/mohi/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/benajaero/mohi/actions/workflows/ci.yml)
+![Version](https://img.shields.io/badge/version-0.0.1--prealpha-7cf3c2)
+![License](https://img.shields.io/badge/license-CC%20BY--SA%204.0-5ab0ff)
+![Stars](https://img.shields.io/github/stars/benajaero/mohi?style=flat)
 
 Mohi is a standards-first, server-driven framework inspired by Mohism. It is built around a simple idea: render on the server, stream minimal DOM patches, and keep the client thin. No hydration by default. Islands when you need client-side code.
 
@@ -42,6 +45,7 @@ pnpm -C apps/playground dev
 - `spec.md` - product and architecture spec
 - `statement.md` - competitive positioning statement
 - `LICENSE` - CC BY-SA 4.0
+- Website - https://benajaero.github.io/mohi/
 
 ## Performance
 

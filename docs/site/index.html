@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Mohi — Live + Resumable Framework</title>
+    <meta
+      name="description"
+      content="Mohi is a standards-first, server-driven framework inspired by Mohism. Live UI, no hydration, tiny patches."
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="bg"></div>
+    <header class="hero">
+      <div class="hero__inner">
+        <div class="hero__badge">Pre-alpha · 0.0.1-prealpha</div>
+        <h1>Mohi</h1>
+        <p class="hero__lead">
+          Standards-first, server-driven UI inspired by Mohism. Render once, stream
+          tiny DOM patches, keep the client thin.
+        </p>
+        <div class="hero__cta">
+          <a class="btn" href="https://github.com/benajaero/mohi">View on GitHub</a>
+          <a class="btn btn--ghost" href="#quickstart">Quickstart</a>
+        </div>
+        <div class="hero__demo">
+          <img src="./assets/terminal-demo.svg" alt="Mohi terminal demo" />
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="section">
+        <div class="section__inner">
+          <h2>Why Mohi</h2>
+          <div class="grid">
+            <div class="card">
+              <h3>Live UI by default</h3>
+              <p>Server-driven sessions push minimal patches over a persistent link.</p>
+            </div>
+            <div class="card">
+              <h3>No hydration tax</h3>
+              <p>The client only delegates events and applies patches. Islands when needed.</p>
+            </div>
+            <div class="card">
+              <h3>Deterministic</h3>
+              <p>Stable manifests, replayable sessions, and policy budgets baked in.</p>
+            </div>
+            <div class="card">
+              <h3>Portable</h3>
+              <p>Standards-first APIs across Node, Deno, Bun, and Edge runtimes.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="quickstart">
+        <div class="section__inner">
+          <h2>Quickstart</h2>
+          <pre><code>pnpm install
+pnpm build
+pnpm test
+pnpm bench
+pnpm -C apps/playground dev</code></pre>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section__inner">
+          <h2>Architecture (at a glance)</h2>
+          <div class="timeline">
+            <div class="timeline__item">
+              <span>MSR</span>
+              <p>Server runtime with live sessions and action queue.</p>
+            </div>
+            <div class="timeline__item">
+              <span>MCL</span>
+              <p>Client link that applies patches and forwards events.</p>
+            </div>
+            <div class="timeline__item">
+              <span>MCB</span>
+              <p>Compiler and deterministic build graph.</p>
+            </div>
+            <div class="timeline__item">
+              <span>MXL</span>
+              <p>Microfrontend composition with shared dependencies.</p>
+            </div>
+            <div class="timeline__item">
+              <span>MGT</span>
+              <p>Governance, policies, and telemetry.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section__inner">
+          <h2>Docs</h2>
+          <div class="links">
+            <a href="https://github.com/benajaero/mohi/blob/main/spec.md">Spec</a>
+            <a href="https://github.com/benajaero/mohi/blob/main/statement.md">Positioning</a>
+            <a href="https://github.com/benajaero/mohi/blob/main/README.md">README</a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="footer__inner">
+        <span>CC BY-SA 4.0</span>
+        <a href="https://github.com/benajaero/mohi">github.com/benajaero/mohi</a>
+      </div>
+    </footer>
+  </body>
+</html>
