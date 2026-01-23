@@ -25,6 +25,39 @@ describe("diffHtml", () => {
 
   it("falls back to replace when node sets differ", () => {
     const result = diffHtml(prev, "<div data-mohi-id=\"mohi-root\">x</div>");
-    expect(result.ops[0]?.op).toBe("replace");
+    expect(result.ops.some((op) => op.op === "remove")).toBe(true);
+  });
+
+  it("emits insert and remove for child list changes", () => {
+    const before = `
+      <main data-mohi-id="mohi-root">
+        <span data-mohi-id="a">A</span>
+      </main>
+    `;
+    const after = `
+      <main data-mohi-id="mohi-root">
+        <span data-mohi-id="a">A</span>
+        <span data-mohi-id="b">B</span>
+      </main>
+    `;
+    const result = diffHtml(before, after);
+    expect(result.ops.some((op) => op.op === "insert")).toBe(true);
+  });
+
+  it("emits move when child order changes", () => {
+    const before = `
+      <main data-mohi-id="mohi-root">
+        <span data-mohi-id="a">A</span>
+        <span data-mohi-id="b">B</span>
+      </main>
+    `;
+    const after = `
+      <main data-mohi-id="mohi-root">
+        <span data-mohi-id="b">B</span>
+        <span data-mohi-id="a">A</span>
+      </main>
+    `;
+    const result = diffHtml(before, after);
+    expect(result.ops.some((op) => op.op === "move")).toBe(true);
   });
 });

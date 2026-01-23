@@ -26,27 +26,74 @@ export function diffHtml(
     return replaceRoot(nextHtml, rootId);
   }
 
-  const prevMap = buildNodeMap(prevHtml);
-  const nextMap = buildNodeMap(nextHtml);
+  const prevTree = buildTree(prevHtml);
+  const nextTree = buildTree(nextHtml);
 
-  if (!hasSameKeys(prevMap, nextMap)) {
+  if (!prevTree.map.has(rootId) || !nextTree.map.has(rootId)) {
+    return replaceRoot(nextHtml, rootId);
+  }
+
+  if (hasParentChanges(prevTree, nextTree)) {
     return replaceRoot(nextHtml, rootId);
   }
 
   const ops: PatchOp[] = [];
 
-  for (const [id, nextNode] of nextMap.entries()) {
-    const prevNode = prevMap.get(id);
-    if (!prevNode) continue;
+  for (const [id] of prevTree.map.entries()) {
+    if (!nextTree.map.has(id)) {
+      ops.push({ op: "remove", id });
+    }
+  }
 
-    const prevText = prevNode.textContent ?? "";
-    const nextText = nextNode.textContent ?? "";
+  for (const [id, nextInfo] of nextTree.map.entries()) {
+    if (prevTree.map.has(id)) continue;
+    if (!nextInfo.parentId) {
+      return replaceRoot(nextHtml, rootId);
+    }
+    if (!prevTree.map.has(nextInfo.parentId)) {
+      return replaceRoot(nextHtml, rootId);
+    }
+    ops.push({
+      op: "insert",
+      id,
+      parent: nextInfo.parentId,
+      index: nextInfo.index,
+      html: nextInfo.outerHTML
+    });
+  }
+
+  for (const [id, nextInfo] of nextTree.map.entries()) {
+    const prevInfo = prevTree.map.get(id);
+    if (!prevInfo) continue;
+
+    const prevText = prevInfo.node.textContent ?? "";
+    const nextText = nextInfo.node.textContent ?? "";
     if (prevText !== nextText) {
       ops.push({ op: "setText", id, value: nextText });
     }
 
-    const attrOps = diffAttributes(prevNode, nextNode, id);
+    const attrOps = diffAttributes(prevInfo.node, nextInfo.node, id);
     ops.push(...attrOps);
+  }
+
+  for (const [parentId, nextChildren] of nextTree.children.entries()) {
+    const prevChildren = prevTree.children.get(parentId);
+    if (!prevChildren) continue;
+    if (arraysEqual(prevChildren, nextChildren)) continue;
+
+    for (const childId of nextChildren) {
+      if (!prevTree.map.has(childId)) continue;
+      const prevIndex = prevChildren.indexOf(childId);
+      const nextIndex = nextChildren.indexOf(childId);
+      if (prevIndex !== nextIndex) {
+        ops.push({
+          op: "move",
+          id: childId,
+          parent: parentId,
+          index: nextIndex
+        });
+      }
+    }
   }
 
   if (ops.length === 0) {
@@ -56,26 +103,59 @@ export function diffHtml(
   return { ops };
 }
 
-function buildNodeMap(html: string): Map<string, Element> {
-  const { document } = parseHTML(html);
-  const nodes = document.querySelectorAll("[data-mohi-id]");
-  const map = new Map<string, Element>();
-  nodes.forEach((node) => {
-    const id = node.getAttribute("data-mohi-id");
-    if (id) map.set(id, node);
-  });
-  return map;
+interface NodeInfo {
+  id: string;
+  parentId?: string;
+  index: number;
+  node: Element;
+  outerHTML: string;
 }
 
-function hasSameKeys(
-  left: Map<string, Element>,
-  right: Map<string, Element>
-): boolean {
-  if (left.size !== right.size) return false;
-  for (const key of left.keys()) {
-    if (!right.has(key)) return false;
+interface TreeInfo {
+  map: Map<string, NodeInfo>;
+  children: Map<string, string[]>;
+}
+
+function buildTree(html: string): TreeInfo {
+  const { document } = parseHTML(html);
+  const nodes = document.querySelectorAll("[data-mohi-id]");
+  const map = new Map<string, NodeInfo>();
+  const children = new Map<string, string[]>();
+
+  nodes.forEach((node) => {
+    const id = node.getAttribute("data-mohi-id");
+    if (!id) return;
+    const parent = node.parentElement?.closest("[data-mohi-id]");
+    const parentId = parent ? parent.getAttribute("data-mohi-id") ?? undefined : undefined;
+    const parentChildren = parentId ? children.get(parentId) ?? [] : [];
+    const index = parentId ? parentChildren.length : 0;
+
+    map.set(id, {
+      id,
+      parentId,
+      index,
+      node,
+      outerHTML: node.outerHTML
+    });
+
+    if (parentId) {
+      parentChildren.push(id);
+      children.set(parentId, parentChildren);
+    }
+  });
+
+  return { map, children };
+}
+
+function hasParentChanges(prevTree: TreeInfo, nextTree: TreeInfo): boolean {
+  for (const [id, nextInfo] of nextTree.map.entries()) {
+    const prevInfo = prevTree.map.get(id);
+    if (!prevInfo) continue;
+    if (prevInfo.parentId !== nextInfo.parentId) {
+      return true;
+    }
   }
-  return true;
+  return false;
 }
 
 function diffAttributes(prevNode: Element, nextNode: Element, id: string): PatchOp[] {
@@ -105,4 +185,12 @@ function diffAttributes(prevNode: Element, nextNode: Element, id: string): Patch
   }
 
   return ops;
+}
+
+function arraysEqual(left: string[], right: string[]): boolean {
+  if (left.length !== right.length) return false;
+  for (let i = 0; i < left.length; i += 1) {
+    if (left[i] !== right[i]) return false;
+  }
+  return true;
 }
