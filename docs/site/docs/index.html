@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Mohi Docs</title>
+    <meta name="description" content="Mohi documentation." />
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
+  <body>
+    <div class="bg"></div>
+    <header class="hero hero--compact">
+      <div class="hero__inner">
+        <div class="hero__badge">Docs</div>
+        <h1>Mohi Documentation</h1>
+        <p class="hero__lead">Core concepts, runtime model, and system design.</p>
+        <div class="hero__cta">
+          <a class="btn" href="./getting-started.html">Getting Started</a>
+          <a class="btn btn--ghost" href="../../index.html">Back to Site</a>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="section">
+        <div class="section__inner">
+          <div class="search">
+            <input id="searchInput" type="search" placeholder="Search docs" />
+          </div>
+          <div id="searchResults" class="search-results"></div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section__inner">
+          <h2>Core docs</h2>
+          <div class="links">
+            <a href="./getting-started.html">Getting Started</a>
+            <a href="../../spec.md">Spec</a>
+            <a href="../../statement.md">Positioning</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section__inner">
+          <h2>Architecture highlights</h2>
+          <div class="grid">
+            <div class="card">
+              <h3>Live sessions</h3>
+              <p>Server-driven state machines with ordered event queues.</p>
+            </div>
+            <div class="card">
+              <h3>Resumability</h3>
+              <p>No hydration by default. The client applies patches only.</p>
+            </div>
+            <div class="card">
+              <h3>Governance</h3>
+              <p>Budgets and policies enforced by tooling, not convention.</p>
+            </div>
+            <div class="card">
+              <h3>Portability</h3>
+              <p>Web-standard APIs across Node, Deno, Bun, and Edge.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="footer__inner">
+        <span>CC BY-SA 4.0</span>
+        <a href="https://github.com/benajaero/mohi">github.com/benajaero/mohi</a>
+      </div>
+    </footer>
+
+    <script src="../search.js"></script>
+  </body>
+</html>

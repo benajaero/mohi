@@ -1,0 +1,20 @@
+[
+  {
+    "title": "Getting Started",
+    "summary": "Install dependencies, build, test, and run the playground.",
+    "url": "./getting-started.html",
+    "tags": ["install", "build", "playground", "run"]
+  },
+  {
+    "title": "Mohi Spec",
+    "summary": "Architecture, primitives, transport, and runtime design.",
+    "url": "../../spec.md",
+    "tags": ["spec", "architecture", "design"]
+  },
+  {
+    "title": "Positioning",
+    "summary": "Competitive positioning and adoption strategy.",
+    "url": "../../statement.md",
+    "tags": ["strategy", "adoption", "positioning"]
+  }
+]
