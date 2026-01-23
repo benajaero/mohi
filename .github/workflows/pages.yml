@@ -6,6 +6,7 @@ on:
     paths:
       - "docs/site/**"
       - "docs/assets/**"
+  workflow_dispatch:
 
 permissions:
   contents: read
