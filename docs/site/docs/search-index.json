@@ -1,20 +1,87 @@
 [
   {
-    "title": "Getting Started",
-    "summary": "Install dependencies, build, test, and run the playground.",
+    "title": "Mohi Docs — Architecture",
+    "summary": "Mohi architecture overview.",
+    "url": "./architecture.html",
+    "tags": [
+      "mohi",
+      "docs",
+      "architecture",
+      "overview"
+    ]
+  },
+  {
+    "title": "Mohi Docs — Getting Started",
+    "summary": "Get started with Mohi.",
     "url": "./getting-started.html",
-    "tags": ["install", "build", "playground", "run"]
+    "tags": [
+      "mohi",
+      "docs",
+      "getting",
+      "started",
+      "with"
+    ]
   },
   {
-    "title": "Mohi Spec",
-    "summary": "Architecture, primitives, transport, and runtime design.",
+    "title": "Mohi Docs — Governance",
+    "summary": "Budgets, policies, and determinism checks.",
+    "url": "./governance.html",
+    "tags": [
+      "mohi",
+      "docs",
+      "governance",
+      "budgets",
+      "policies",
+      "determinism"
+    ]
+  },
+  {
+    "title": "Mohi Docs",
+    "summary": "Mohi documentation.",
+    "url": "./index.html",
+    "tags": [
+      "mohi",
+      "docs",
+      "documentation"
+    ]
+  },
+  {
+    "title": "Mohi Docs — Runtime",
+    "summary": "Live sessions, actions, patches, and transport.",
+    "url": "./runtime.html",
+    "tags": [
+      "mohi",
+      "docs",
+      "runtime",
+      "live",
+      "sessions",
+      "actions"
+    ]
+  },
+  {
+    "title": "Mohi — Codex Spec (v0.1)",
+    "summary": "Mohi — Codex Spec (v0.1)  0. Executive Summary  Mohi is a Mohist web framework for JavaScript/TypeScript that optimises for utility per unit of compute, time, and complexity.  It achieves this by:",
     "url": "../../spec.md",
-    "tags": ["spec", "architecture", "design"]
+    "tags": [
+      "mohi",
+      "codex",
+      "spec",
+      "executive",
+      "summary",
+      "mohist"
+    ]
   },
   {
-    "title": "Positioning",
-    "summary": "Competitive positioning and adoption strategy.",
+    "title": "Mohi Competitive Positioning Statement",
+    "summary": "Mohi Competitive Positioning Statement  The category Mohi creates  Mohi is a frugal, standards-first \"live + resumable\" web framework: server-driven UI with real-time updates, without hydration, and with first-class governance for performance, portability, security, and scale.  It is not another React meta-framework. It is a new operating model for building web systems: one source of truth, one render loop, one measurable budget, deployable anywhere.",
     "url": "../../statement.md",
-    "tags": ["strategy", "adoption", "positioning"]
+    "tags": [
+      "mohi",
+      "competitive",
+      "positioning",
+      "statement",
+      "category",
+      "creates"
+    ]
   }
 ]

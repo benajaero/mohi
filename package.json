@@ -16,6 +16,7 @@
     "test": "pnpm -r test",
     "bench": "pnpm -C apps/benchmarks bench",
     "wasm:build": "bash scripts/build-wasm.sh",
+    "docs:search": "node scripts/generate-docs-index.mjs",
     "dev": "pnpm -C apps/playground dev"
   },
   "devDependencies": {
