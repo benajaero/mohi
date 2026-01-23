@@ -14,6 +14,7 @@ Pre-alpha (0.0.1-prealpha). The core live loop is in place with a minimal protoc
 - Resumability by default; the client only handles events and patches.
 - Deterministic manifests and policy checks to keep projects honest.
 - A path to microfrontends without duplicating runtime code.
+- Batteries-included defaults with a small, explicit plugin surface for extensions.
 
 ## Mohist-inspired design
 

@@ -22,6 +22,12 @@ export interface SessionEvent extends EventData {
   seq: number;
 }
 
+export interface RuntimePlugin {
+  name: string;
+  onActionStart?: (event: SessionEvent) => void | Promise<void>;
+  onActionEnd?: (event: SessionEvent, result: SessionResult) => void | Promise<void>;
+}
+
 export interface SessionLogEntry {
   seq: number;
   action: string;
@@ -43,11 +49,12 @@ export class LiveSession {
   private eventLog: SessionLogEntry[] = [];
   private lastHtml = "";
   private diffBackend?: DiffBackend;
+  private plugins: RuntimePlugin[] = [];
 
   constructor(
     private page: LivePage<Record<string, unknown>>,
     private ctx: SessionContext,
-    options?: string | { initialHtml?: string; diffBackend?: DiffBackend }
+    options?: string | { initialHtml?: string; diffBackend?: DiffBackend; plugins?: RuntimePlugin[] }
   ) {
     if (typeof options === "string") {
       this.lastHtml = options;
@@ -55,6 +62,11 @@ export class LiveSession {
     }
     if (options?.initialHtml) this.lastHtml = options.initialHtml;
     this.diffBackend = options?.diffBackend;
+    if (options?.plugins) this.plugins = options.plugins;
+  }
+
+  setPlugins(plugins: RuntimePlugin[]): void {
+    this.plugins = plugins;
   }
 
   setPatchHandler(handler: PatchHandler): void {
@@ -96,6 +108,8 @@ export class LiveSession {
       throw new Error(`Unknown action: ${event.action}`);
     }
 
+    await this.runHook("onActionStart", event);
+
     const renderStart = performance.now();
     await (handler as (payload?: unknown) => void).call(this.page, event.payload);
     const html = this.page.render();
@@ -113,7 +127,7 @@ export class LiveSession {
     const patch = diffHtmlWithBackend(this.lastHtml, html, "mohi-root", this.diffBackend);
     this.lastHtml = html;
 
-    return {
+    const result: SessionResult = {
       patch: {
         ops: patch.ops,
         metrics: {
@@ -123,6 +137,18 @@ export class LiveSession {
         }
       }
     };
+
+    await this.runHook("onActionEnd", event, result);
+    return result;
+  }
+
+  private async runHook(hook: keyof RuntimePlugin, ...args: unknown[]): Promise<void> {
+    for (const plugin of this.plugins) {
+      const fn = plugin[hook];
+      if (typeof fn === "function") {
+        await fn(...args);
+      }
+    }
   }
 }
 

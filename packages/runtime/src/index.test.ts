@@ -51,6 +51,23 @@ describe("LiveSession", () => {
     const page = replayEvents(() => new CounterPage(), events);
     expect(page.state.count).toBe(4);
   });
+
+  it("runs plugin hooks around actions", async () => {
+    const calls: string[] = [];
+    const session = new LiveSession(new CounterPage(), { id: "s2", route: "/" }, {
+      plugins: [
+        {
+          name: "test",
+          onActionStart: () => calls.push("start"),
+          onActionEnd: () => calls.push("end")
+        }
+      ]
+    });
+
+    session.enqueue({ seq: 1, target: "root", action: "increment", payload: 1 });
+    await waitFor(() => calls.length === 2);
+    expect(calls).toEqual(["start", "end"]);
+  });
 });
 
 async function waitFor(condition: () => boolean, timeoutMs = 50): Promise<void> {
