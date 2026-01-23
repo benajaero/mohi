@@ -4,6 +4,10 @@ Mohi is a standards-first, server-driven framework built around a simple idea: r
 
 This repo is early, but the direction is clear: deterministic builds, portable runtimes (Node/Deno/Bun/Edge), and governance that is enforced by tooling instead of tribal knowledge.
 
+## Current status
+
+Pre-alpha (0.0.1-prealpha). The core live loop is in place with a minimal protocol, runtime session queue, patch delivery, and a playground server. Diffing and patch ops are basic and will evolve quickly.
+
 ## What matters here
 
 - Server-driven live UI with a persistent link and tiny patches.
@@ -28,6 +32,8 @@ This repo is early, but the direction is clear: deterministic builds, portable r
 - Install Node 20+ and pnpm
 - `pnpm install`
 - `pnpm build`
+- `pnpm typecheck`
+- `pnpm test`
 - `pnpm -C apps/playground dev`
 
 License: CC BY-SA 4.0
