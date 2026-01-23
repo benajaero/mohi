@@ -15,6 +15,13 @@ Pre-alpha (0.0.1-prealpha). The core live loop is in place with a minimal protoc
 - Deterministic manifests and policy checks to keep projects honest.
 - A path to microfrontends without duplicating runtime code.
 
+## Mohist-inspired design
+
+- Frugality: minimal client runtime and patch-first updates to avoid duplicate work.
+- Determinism: stable manifests, event logs, and replayable sessions over hidden magic.
+- Standards-first: Web APIs and portable runtimes instead of bespoke platform lock-in.
+- Composable governance: explicit budgets, policies, and module boundaries that scale.
+
 ## Who this is for
 
 - Teams that feel their JS payloads are bloated.
