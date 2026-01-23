@@ -22,6 +22,14 @@ export interface SessionEvent extends EventData {
   seq: number;
 }
 
+export interface SessionLogEntry {
+  seq: number;
+  action: string;
+  payload?: unknown;
+  stateHash: string;
+  ts: number;
+}
+
 export interface SessionResult {
   patch: PatchData;
 }
@@ -32,6 +40,7 @@ export class LiveSession {
   private queue: SessionEvent[] = [];
   private processing = false;
   private onPatch?: PatchHandler;
+  private eventLog: SessionLogEntry[] = [];
 
   constructor(private page: LivePage<Record<string, unknown>>, private ctx: SessionContext) {}
 
@@ -42,6 +51,10 @@ export class LiveSession {
   enqueue(event: SessionEvent): void {
     this.queue.push(event);
     void this.processQueue();
+  }
+
+  getEventLog(): SessionLogEntry[] {
+    return [...this.eventLog];
   }
 
   private async processQueue(): Promise<void> {
@@ -71,6 +84,15 @@ export class LiveSession {
     const html = this.page.render();
     const renderMs = performance.now() - renderStart;
 
+    const stateHash = hashState(this.page.state);
+    this.eventLog.push({
+      seq: event.seq,
+      action: event.action,
+      payload: event.payload,
+      stateHash,
+      ts: Date.now()
+    });
+
     const patch = replaceRoot(html);
 
     return {
@@ -88,4 +110,45 @@ export class LiveSession {
 
 export function renderPage(page: LivePage<Record<string, unknown>>): string {
   return page.render();
+}
+
+export function replayEvents<TState extends Record<string, unknown>>(
+  pageFactory: () => LivePage<TState>,
+  events: SessionEvent[]
+): LivePage<TState> {
+  const page = pageFactory();
+  for (const event of events) {
+    const handler = (page as unknown as Record<string, unknown>)[event.action];
+    if (typeof handler !== "function") {
+      throw new Error(`Unknown action: ${event.action}`);
+    }
+    (handler as (payload?: unknown) => void).call(page, event.payload);
+  }
+  return page;
+}
+
+function hashState(state: Record<string, unknown>): string {
+  const serialized = stableStringify(state);
+  return djb2(serialized);
+}
+
+function stableStringify(value: unknown): string {
+  if (value === null || typeof value !== "object") {
+    return JSON.stringify(value);
+  }
+  if (Array.isArray(value)) {
+    return `[${value.map((item) => stableStringify(item)).join(",")}]`;
+  }
+  const obj = value as Record<string, unknown>;
+  const keys = Object.keys(obj).sort();
+  const entries = keys.map((key) => `${JSON.stringify(key)}:${stableStringify(obj[key])}`);
+  return `{${entries.join(",")}}`;
+}
+
+function djb2(input: string): string {
+  let hash = 5381;
+  for (let i = 0; i < input.length; i += 1) {
+    hash = (hash * 33) ^ input.charCodeAt(i);
+  }
+  return (hash >>> 0).toString(16);
 }
