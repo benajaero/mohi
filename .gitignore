@@ -43,6 +43,9 @@ dist
 # Benchmark reports
 benchmarks/last-report.json
 
+# wasm-pack output
+packages/diff-wasm-rs/pkg
+
 # Dependency directories
 node_modules/
 jspm_packages/

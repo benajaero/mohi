@@ -10,6 +10,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+      - name: Install wasm-pack
+        run: cargo install wasm-pack
       - uses: pnpm/action-setup@v4
         with:
           version: 9.15.0
@@ -19,9 +23,18 @@ jobs:
           cache: pnpm
       - name: Install
         run: pnpm install --frozen-lockfile
+      - name: Build wasm
+        run: pnpm wasm:build
       - name: Build
         run: pnpm build
       - name: Typecheck
         run: pnpm typecheck
       - name: Test
         run: pnpm test
+      - name: Bench
+        run: pnpm bench
+      - name: Upload benchmark report
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmarks-report
+          path: benchmarks/last-report.json
