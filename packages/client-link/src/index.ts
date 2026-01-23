@@ -214,6 +214,7 @@ export class ProtocolClient {
   private ws?: WebSocket;
   private seq = 0;
   private sid = "";
+  private lastPatchSeq = 0;
 
   constructor(private options: ProtocolClientOptions) {}
 
@@ -231,6 +232,8 @@ export class ProtocolClient {
       }
       if (message.type === "patch") {
         this.options.link.applyPatch(message.data.ops);
+        this.lastPatchSeq = message.seq;
+        this.sendAck(this.lastPatchSeq);
       }
     });
   }
@@ -245,6 +248,12 @@ export class ProtocolClient {
     if (!this.ws) return;
     const capabilities = this.options.capabilities ?? ["patch.v1", "event.v1"];
     const message = createEnvelope("hello", "", this.seq, { capabilities });
+    this.ws.send(JSON.stringify(message));
+  }
+
+  private sendAck(received: number): void {
+    if (!this.ws || !this.sid) return;
+    const message = createEnvelope("ack", this.sid, this.seq, { received });
     this.ws.send(JSON.stringify(message));
   }
 }

@@ -44,10 +44,13 @@ wss.on("connection", (socket) => {
   const session = new LiveSession(page, { id: sessionId, route: "/" });
   session.setInitialHtml(page.render());
   let serverSeq = 0;
+  const patchQueue: string[] = [];
+  let inFlight = 0;
+  const maxInFlight = 5;
 
   session.setPatchHandler((result) => {
     const message = createEnvelope("patch", sessionId, ++serverSeq, result.patch);
-    socket.send(JSON.stringify(message));
+    enqueuePatch(JSON.stringify(message));
   });
 
   socket.on("message", async (data) => {
@@ -66,7 +69,27 @@ wss.on("connection", (socket) => {
       session.enqueue({ ...parsed.data, seq: parsed.seq });
       return;
     }
+
+    if (parsed.type === "ack") {
+      inFlight = Math.max(0, inFlight - 1);
+      flushQueue();
+      return;
+    }
   });
+
+  function enqueuePatch(payload: string): void {
+    patchQueue.push(payload);
+    flushQueue();
+  }
+
+  function flushQueue(): void {
+    while (inFlight < maxInFlight && patchQueue.length > 0) {
+      const payload = patchQueue.shift();
+      if (!payload) return;
+      socket.send(payload);
+      inFlight += 1;
+    }
+  }
 });
 
 server.listen(3000, () => {
@@ -111,6 +134,14 @@ function renderHtml(): string {
         }
         if (message.type === "patch") {
           applyPatch(message.data.ops);
+          ws.send(JSON.stringify({
+            v: ${PROTOCOL_VERSION},
+            type: "ack",
+            sid: sessionId,
+            seq: clientSeq,
+            ts: Date.now(),
+            data: { received: message.seq }
+          }));
         }
       });
 
