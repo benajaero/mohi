@@ -1,5 +1,7 @@
 # Mohi
 
+![CI](https://github.com/benajaero/mohi/actions/workflows/ci.yml/badge.svg?branch=main)
+
 Mohi is a standards-first, server-driven framework inspired by Mohism. It is built around a simple idea: render on the server, stream minimal DOM patches, and keep the client thin. No hydration by default. Islands when you need client-side code.
 
 This repo is early, but the direction is clear: deterministic builds, portable runtimes (Node/Deno/Bun/Edge), and governance that is enforced by tooling instead of tribal knowledge.
@@ -43,5 +45,9 @@ Pre-alpha (0.0.1-prealpha). The core live loop is in place with a minimal protoc
 - `pnpm typecheck`
 - `pnpm test`
 - `pnpm -C apps/playground dev`
+
+## Performance
+
+Benchmarks run in CI and upload `benchmarks/last-report.json` as an artifact on each run.
 
 License: CC BY-SA 4.0
