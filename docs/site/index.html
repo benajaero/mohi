@@ -8,6 +8,7 @@
       name="description"
       content="Mohi is a standards-first, server-driven framework inspired by Mohism. Live UI, no hydration, tiny patches."
     />
+    <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg" />
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
@@ -32,22 +33,22 @@
 
     <main>
       <section class="section">
-        <div class="section__inner">
+        <div class="section__inner reveal">
           <h2>Why Mohi</h2>
           <div class="grid">
-            <div class="card">
+            <div class="card reveal reveal-delay-1">
               <h3>Live UI by default</h3>
               <p>Server-driven sessions push minimal patches over a persistent link.</p>
             </div>
-            <div class="card">
+            <div class="card reveal reveal-delay-2">
               <h3>No hydration tax</h3>
               <p>The client only delegates events and applies patches. Islands when needed.</p>
             </div>
-            <div class="card">
+            <div class="card reveal reveal-delay-3">
               <h3>Deterministic</h3>
               <p>Stable manifests, replayable sessions, and policy budgets baked in.</p>
             </div>
-            <div class="card">
+            <div class="card reveal reveal-delay-4">
               <h3>Portable</h3>
               <p>Standards-first APIs across Node, Deno, Bun, and Edge runtimes.</p>
             </div>
@@ -56,7 +57,7 @@
       </section>
 
       <section class="section" id="quickstart">
-        <div class="section__inner">
+        <div class="section__inner reveal">
           <h2>Quickstart</h2>
           <pre><code>pnpm install
 pnpm build
@@ -67,26 +68,26 @@ pnpm -C apps/playground dev</code></pre>
       </section>
 
       <section class="section">
-        <div class="section__inner">
+        <div class="section__inner reveal">
           <h2>Architecture (at a glance)</h2>
           <div class="timeline">
-            <div class="timeline__item">
+            <div class="timeline__item reveal reveal-delay-1">
               <span>MSR</span>
               <p>Server runtime with live sessions and action queue.</p>
             </div>
-            <div class="timeline__item">
+            <div class="timeline__item reveal reveal-delay-2">
               <span>MCL</span>
               <p>Client link that applies patches and forwards events.</p>
             </div>
-            <div class="timeline__item">
+            <div class="timeline__item reveal reveal-delay-3">
               <span>MCB</span>
               <p>Compiler and deterministic build graph.</p>
             </div>
-            <div class="timeline__item">
+            <div class="timeline__item reveal reveal-delay-4">
               <span>MXL</span>
               <p>Microfrontend composition with shared dependencies.</p>
             </div>
-            <div class="timeline__item">
+            <div class="timeline__item reveal reveal-delay-4">
               <span>MGT</span>
               <p>Governance, policies, and telemetry.</p>
             </div>
@@ -95,7 +96,7 @@ pnpm -C apps/playground dev</code></pre>
       </section>
 
       <section class="section">
-        <div class="section__inner">
+        <div class="section__inner reveal">
           <h2>Docs</h2>
           <div class="links">
             <a href="./docs/index.html">Documentation</a>
@@ -113,5 +114,15 @@ pnpm -C apps/playground dev</code></pre>
         <a href="https://github.com/benajaero/mohi">github.com/benajaero/mohi</a>
       </div>
     </footer>
+    <script>
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+          }
+        });
+      }, { threshold: 0.1 });
+      document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+    </script>
   </body>
 </html>
